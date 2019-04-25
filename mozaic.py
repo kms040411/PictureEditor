@@ -8,6 +8,7 @@ import p_action
 class Mozaic_Window(Toplevel):
     def __init__(self, parent):
         super(Mozaic_Window, self).__init__(parent)
+        self.attributes("-toolwindow", 1)
         self.title("Mozaic")
         self.parent = parent
         self.geometry("200x140+{}+{}".format(parent.winfo_x() + parent.winfo_width() + 30, parent.winfo_y()))
@@ -29,7 +30,7 @@ class Mozaic_Window(Toplevel):
         def scale_func(aux):
             self.level = mozaic_level.get()
         mozaic_level = IntVar()
-        scale1 = Scale(self, label = "Set Mozaic Level", variable = mozaic_level, command = scale_func, orient = "horizontal", showvalue = True, resolution = 1, from_ = 2, to = 100)
+        scale1 = Scale(self, label = "Set Mozaic Level", variable = mozaic_level, command = scale_func, orient = "horizontal", showvalue = True, resolution = 1, from_ = 2, to = 50)
         scale1.pack(side = "top")
 
         button1 = Button(self, text = "Apply", command = self.mozaic)

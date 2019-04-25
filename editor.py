@@ -6,6 +6,7 @@ import copy
 
 import mozaic
 import p_action
+import window_manager
 
 # global variables       
 undo_stack = None           # Undo Stack
@@ -22,12 +23,13 @@ class App(Tk):
         self.o_mozaic_window = False    # Is mozaic window opened?
 
         self.undo_stack = list()        # Initialize Undo Stack
-        self.undo_lock = Lock()
+
+        self.wm = window_manager.Window_Manager(self)   # Initialize Window Manager
 
         # Root Window
         self.title("Simple Picture Editor")
         self.geometry("640x400+100+100")
-        self.resizable(False, False)
+        self.resizable(True, True)
 
         # Widgets
         self.canvas1 = Canvas(self)
@@ -35,6 +37,7 @@ class App(Tk):
 
         # Events
         self.bind_all('<Control-KeyPress-z>', self.undo)
+        self.bind('<Configure>', self.root_resize)
 
         # Menus
         self.root_menu = Menu(self)
@@ -66,27 +69,30 @@ class App(Tk):
         self.file = filedialog.askopenfilename(title = "Open File", filetypes = (("JPEG Image", "*.jfif"), ("png files", "*.png")))
         self.image = Image.open(self.file)
         self.undo_stack = list()
-        self.refreshImage()
+        self.title("Simple Picture Editor" + "<{}>".format(self.file))
+        self.refreshImage(True)
     
-    def refreshImage(self):
+    def refreshImage(self, first = False):
+        if(self.image == None):
+            return
         self.photoimage = ImageTk.PhotoImage(self.image)
         current_width = self.photoimage.width()
         current_height = self.photoimage.height()
         root_width = self.winfo_x()
         root_height = self.winfo_y()
 
-        self.geometry(str(current_width + 20) + "x" + str(current_height + 20) + "+" + str(root_width) + "+" + str(root_height))
+        if(first):
+            self.geometry(str(current_width + 20) + "x" + str(current_height + 20) + "+" + str(root_width) + "+" + str(root_height))
         self.canvas1.create_image(0, 0, image = self.photoimage, anchor = NW)
 
     def undo(self, aux = None):
-        self.undo_lock.acquire()
-
         if(len(self.undo_stack) == 0):
             return
         recent_event = self.undo_stack.pop()
         recent_event.restore()
-
-        self.undo_lock.release()
+    
+    def root_resize(self, aux = None):
+        self.canvas1.place(x = self.winfo_width() / 2 + 45, y = self.winfo_height() / 2 + 40, anchor = CENTER)
         
     def restoreImage(self, img):
         self.image = copy.deepcopy(img)
