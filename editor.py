@@ -1,8 +1,11 @@
 from tkinter import *
 from PIL import Image, ImageFilter, ImageTk
 from tkinter import filedialog
+from threading import Lock
+import copy
 
 import mozaic
+import p_action
 
 # global variables       
 undo_stack = None           # Undo Stack
@@ -19,6 +22,7 @@ class App(Tk):
         self.o_mozaic_window = False    # Is mozaic window opened?
 
         self.undo_stack = list()        # Initialize Undo Stack
+        self.undo_lock = Lock()
 
         # Root Window
         self.title("Simple Picture Editor")
@@ -44,6 +48,8 @@ class App(Tk):
 
         editmenu = Menu(self.root_menu, tearoff = 0)
         editmenu.add_command(label = "Mozaic", command = self.mozaic_menu)
+        editmenu.add_separator()
+        editmenu.add_command(label = "Undo", command = self.undo)
         self.root_menu.add_cascade(label = "Edit", menu = editmenu)
 
         self.config(menu = self.root_menu)
@@ -51,7 +57,6 @@ class App(Tk):
         self.mainloop()
 
     def mozaic_menu(self):
-        print(self.o_mozaic_window)
         if(self.o_mozaic_window):
             return
         self.o_mozaic_window = True
@@ -60,6 +65,7 @@ class App(Tk):
     def openfile(self):
         self.file = filedialog.askopenfilename(title = "Open File", filetypes = (("JPEG Image", "*.jfif"), ("png files", "*.png")))
         self.image = Image.open(self.file)
+        self.undo_stack = list()
         self.refreshImage()
     
     def refreshImage(self):
@@ -69,11 +75,22 @@ class App(Tk):
         root_width = self.winfo_x()
         root_height = self.winfo_y()
 
-        self.geometry(str(current_width) + "x" + str(current_height) + "+" + str(root_width) + "+" + str(root_height))
+        self.geometry(str(current_width + 20) + "x" + str(current_height + 20) + "+" + str(root_width) + "+" + str(root_height))
         self.canvas1.create_image(0, 0, image = self.photoimage, anchor = NW)
 
-    def undo(self, aux):
-        print("z pressed")
+    def undo(self, aux = None):
+        self.undo_lock.acquire()
+
+        if(len(self.undo_stack) == 0):
+            return
+        recent_event = self.undo_stack.pop()
+        recent_event.restore()
+
+        self.undo_lock.release()
+        
+    def restoreImage(self, img):
+        self.image = copy.deepcopy(img)
+        self.refreshImage()
 
 def donothing():
     pass    # Temp Function that does nothing

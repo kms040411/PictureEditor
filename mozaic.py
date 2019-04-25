@@ -1,8 +1,9 @@
 from tkinter import *
 from PIL import Image, ImageFilter, ImageTk
-from tkinter import filedialog
+import copy
 
 import editor
+import p_action
 
 class Mozaic_Window(Toplevel):
     def __init__(self, parent):
@@ -37,6 +38,8 @@ class Mozaic_Window(Toplevel):
     def mozaic(self):
         if(self.target == 0):
             img = self.parent.image
+            new_action = p_action.Action(self.parent, copy.deepcopy(img), "Mozaic <{}>".format(self.level))
+            new_action.stack()
             if(img == None):
                 print("No Image")
             pixels = img.load()
@@ -50,12 +53,13 @@ class Mozaic_Window(Toplevel):
     
     def pixel_average(self, pixels, left, top, level, size):
         average = [0, 0, 0]
-        total_pixels = level * level
+        total_pixels = 0
         for i in range(left, min(left + level, size[0])):
             for j in range(top, min(top + level, size[1])):
                 average[0] = average[0] + pixels[i, j][0]
                 average[1] = average[1] + pixels[i, j][1]
                 average[2] = average[2] + pixels[i, j][2]
+                total_pixels += 1
         average[0] = int(average[0] / total_pixels)
         average[1] = int(average[1] / total_pixels)
         average[2] = int(average[2] / total_pixels)
